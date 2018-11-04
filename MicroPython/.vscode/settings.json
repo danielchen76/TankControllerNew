@@ -1,0 +1,9 @@
+{
+	"python.linting.pylintEnabled": false,
+	"sync-rsync.exclude": [
+		".git",
+		".vscode"
+	],
+	"sync-rsync.remote": "dietpi@192.168.2.45:/home/dietpi/code/TankControllerNew/MicroPython",
+	"sync-rsync.local": "/mnt/c/Users/daniel/Documents/Code/TankControllerNew/MicroPython/"
+}
