@@ -5,6 +5,7 @@ from ui import *
 from waterlevel import WaterLevel
 from sensors import *
 from power import *
+from json_string import CMD
 
 from pyb import LED
 
@@ -18,6 +19,64 @@ Temperature = TempSensor('X20')
 Devices.Init()
 Sensors.Init()
 Power.Init()
+
+# lost connect with Pi Zero, need stop some pump
+def lostConnection():
+	Devices.Ro_pump_switch(False)
+	Devices.Ro_ext_pump_switch(False)
+	Devices.Sea_pump_switch(False)
+	# Sync to UI
+
+def Cmd_Sea_pump_switch(msg):
+	Devices.Sea_pump_switch(msg)
+
+def Cmd_Ro_ext_pump_switch(msg):
+	Devices.Ro_ext_pump_switch(msg)
+
+def Cmd_Ro_pump_switch(msg):
+	Devices.Ro_pump_switch(msg)
+
+def Cmd_Main_pump_switch(msg):
+	Devices.Main_pump_switch(msg)
+
+def Cmd_Skim_pump_switch(msg):
+	Devices.Skim_pump_switch(msg)
+
+def Cmd_Main_wave_switch(msg):
+	Devices.Main_wave_switch(msg)
+
+def Cmd_Main_wave_bak_switch(msg):
+	Devices.Main_wave_bak_switch(msg)
+
+def Cmd_SwitchToBattery(msg):
+	Power.SwitchToBattery(msg)
+
+def Cmd_TurnOnBat24V(msg):
+	Power.TurnOnBat24V(msg)
+
+
+Cmd_entries = {
+	CMD.JSON_MAIN_PUMP		: Cmd_Sea_pump_switch,
+	CMD.JSON_SKIM_PUMP		: Cmd_Skim_pump_switch,
+	CMD.JSON_RO_PUMP		: Cmd_Ro_pump_switch,
+	CMD.JSON_RO_EXT_PUMP	: Cmd_Ro_ext_pump_switch,
+	CMD.JSON_SEA_PUMP		: Cmd_Sea_pump_switch,
+	CMD.JSON_WAVE_PUMP		: Cmd_Main_wave_switch,
+	CMD.JSON_WAVE_BAK		: Cmd_Main_wave_bak_switch,
+
+	CMD.JSON_BAT_24V		: Cmd_SwitchToBattery,
+	CMD.JSON_DC_BAT			: Cmd_TurnOnBat24V,
+}
+
+def Cmd_Set(id, data):
+	UI.LogOut("set id " + str(id) + str(data))
+	for k, v in data.items():
+		msg_entry = Cmd_entries.get(k)
+		if msg_entry:
+			msg_entry(v)
+
+	UI.Response(id, 0)
+
 
 # Main loop
 while 1:
@@ -40,19 +99,32 @@ while 1:
 	# Sensors
 	Sensors.check()
 
+	# Power
+	data = Power.Check()
+	if data:
+		UI.SetPower(data)
+
 	# UI uart
-	if UI.Check():
-		UI.LogOut("have request from Pi Zero W")
+	msg_count = UI.Check()
+	if msg_count > 0:
+		while 1:
+			try:
+				msg = UI.cmds.popleft()
+				UI.LogOut(str(msg))
+				action = msg.get(CMD.JSON_ACTION)
+				if action == CMD.JSON_A_SET:
+					UI.LogOut(msg.get(CMD.JSON_ACTION))
+					UI.LogOut(str(msg.get(CMD.JSON_A_ID)))
+					UI.LogOut(str(msg.get(CMD.JSON_DATA)))
+					Cmd_Set(msg.get(CMD.JSON_A_ID), msg.get(CMD.JSON_DATA))
+				else:
+					UI.Response(msg.get(CMD.JSON_A_ID), 1)
+
+			except:
+				break
 
 	UI.Report()
 
 	# Main process
 
-
-# lost connect with Pi Zero, need stop some pump
-def lostConnection():
-	Devices.Ro_pump_switch(False)
-	Devices.Ro_ext_pump_switch(False)
-	Devices.Sea_pump_switch(False)
-	# Sync to UI
 

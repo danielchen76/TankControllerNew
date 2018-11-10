@@ -5,12 +5,16 @@ from micropython import const
 
 import json
 import time
+from collections import deque
 
 from json_string import CMD
 
 # total depth
 RO_TANK_TOTAL_LEVEL = const(320)
 SUB_TANK_TOTAL_LEVEL = const(410)
+
+# UART buffer length
+UI_UART_BUF_LEN = const(256)
 
 class UI:
 	report_ticks_ms = 0
@@ -48,6 +52,10 @@ class UI:
 
 		UI.WorkMode = 0
 
+		UI.id = 0
+		UI.last_handshake_tick = 0
+		UI.uart_connection = False
+
 		# Init
 		UI.tm = TM1637(Pin('X18'), Pin('X17'))
 		UI.tm.brightness(0)		# darkest
@@ -56,22 +64,72 @@ class UI:
 		UI.pi_uart = UART(1, 115200)
 		UI.pi_uart.init(115200, timeout = 100)
 
-	def Check():
-		count = UI.pi_uart.any()
-		if count < 3 :
-			return False
+		# Buffer
+		UI.uart_buf = memoryview(bytearray(UI_UART_BUF_LEN))
+		UI.uart_buf_len = 0
 
-		while 1:
-			data = UI.pi_uart.readline()
-			if data:
-				try:
-					decode_data = json.loads(data)
-				except:
-					decode_data = None
+		UI.cmds = deque((), 5)
+
+	def ProcessReportMsg(msg):
+		UI.LogOut("Report Msg" + str(msg['data']))
+		UI.last_handshake_tick = time.ticks_ms()
+		if UI.uart_connection == False:
+			msg_local = {}
+			msg_local[CMD.JSON_ACTION] = CMD.JSON_A_CONN
+			UI.cmds.append(msg_local)
+			UI.uart_connection = True
+			UI.LogOut("Pi connection is ok")
+
+	def ProcessGetMsg(msg):
+		UI.LogOut("Get Msg" + str(msg['data']))
+
+	def ProcessMsg(msg):
+		try:
+			data = json.loads(msg)
+		except:
+			data = None
+		else:
+			# put data input queue
+			action = data[CMD.JSON_ACTION]
+			if action is not None:
+				if action == CMD.JSON_A_REPORT:
+					UI.ProcessReportMsg(data)
+				elif action == CMD.JSON_A_GET:
+					UI.ProcessGetMsg(data)
 				else:
-					# TODO: put data input queuc
-					UI.LogOut(str(decode_data))
-			return True
+					UI.cmds.append(data)
+
+		UI.uart_buf_len = 0
+
+	def Check():
+		while 1:
+			count = UI.pi_uart.any()
+			if count == 0:
+				break
+
+			data = UI.pi_uart.read(count)
+			if data:
+				for e in data:
+					if e == 0x0D or e == 0x0A:
+						# decode buffer
+						if UI.uart_buf_len == 0:
+							continue
+						else:
+							UI.ProcessMsg(bytes(UI.uart_buf[0:UI.uart_buf_len]))
+					else:
+						UI.uart_buf[UI.uart_buf_len] = e
+						UI.uart_buf_len += 1
+		
+		# Check connection
+		if UI.uart_connection:
+			if time.ticks_diff(time.ticks_ms(), UI.last_handshake_tick) > 5000:
+				# lost connection, add a msg
+				msg = {}
+				msg[CMD.JSON_ACTION] = CMD.JSON_A_DISCON
+				UI.cmds.append(msg)
+				UI.uart_connection = False
+
+		return len(UI.cmds)
 
 	def Report():
 		if time.ticks_diff(time.ticks_ms(), UI.report_ticks_ms) < 1000:
@@ -129,11 +187,33 @@ class UI:
 	def GetTemperature():
 		return UI.Temperature
 
+	# Power
+	def SetPower(data):
+		UI.dc_v 		= data['DC']
+		UI.battery_v	= data['BAT']
+		UI.dc_c 		= data['DC_C']
+		UI.main_pump_c 	= data['MP_C']
+		UI.Skim_pump_c 	= data['SP_C']
+
+		UI.bat24v 		= data['bat24']
+		UI.dc24_bat24 	= data['dc24bat']
+
 	def StatusReport(data):
 		report_data = {}
 		report_data[CMD.JSON_ACTION] = CMD.JSON_A_REPORT
+		report_data[CMD.JSON_A_ID] = UI.id
 		report_data[CMD.JSON_DATA] = data
 		output = json.dumps(report_data) + '\r\n'
+		UI.pi_uart.write(output)
+		UI.id += 1
+
+	def Response(id, err, data = None):
+		resp_data = {}
+		resp_data[CMD.JSON_ACTION] = CMD.JSON_A_RESPONSE
+		resp_data[CMD.JSON_A_ID] = id
+		resp_data[CMD.JSON_A_ERR] = err
+		resp_data[CMD.JSON_DATA] = data
+		output = json.dumps(resp_data) + '\r\n'
 		UI.pi_uart.write(output)
 
 	def LogOut(data):
@@ -146,17 +226,48 @@ class UI:
 # =============== Beep ================
 class Beep:
 	timer = None
+	count = 0
+	on_count = 0
+	off_count = 0
+	max_count = 0
+
+	BEEP_MODE_NONE = const(0)
+	BEEP_MODE_WARN = const(1)		# Warnning mode()
+	BEEP_MODE_ERROR = const(2)		# Error mode()
 
 	def Init():
 		Beep.pin = Pin('X8', Pin.OUT)
 		Beep.timer = Timer(1)
 
+	def Mode(mode):
+		Beep.End()
+		Beep.pin.off()
+		Beep.count = 0
+
+		if mode == Beep.BEEP_MODE_NONE:
+			return
+		elif mode == Beep.BEEP_MODE_WARN:
+			Beep.on_count = 3
+			Beep.off_count = 500
+	
+		elif mode == Beep.BEEP_MODE_ERROR:
+			Beep.on_count = 10
+			Beep.off_count = 25
+
+		Beep.max_count = Beep.on_count + Beep.off_count
+		Beep.Begin()
+
 	def Begin():
-		Beep.timer.init(freq = 10, callback = Beep.callback)
+		Beep.timer.init(freq = 100, callback = Beep.beepCallback)
 
 	def End():
 		Beep.timer.deinit()
+		Beep.pin.off()
 
-	def callback(timer):
-		return
+	def beepCallback(timer):
+		if Beep.count == 0:
+			Beep.pin.on()
+		if Beep.count == Beep.on_count:
+			Beep.pin.off()
+		Beep.count = 0 if Beep.count == Beep.max_count else Beep.count + 1
 		

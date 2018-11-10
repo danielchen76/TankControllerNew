@@ -2,9 +2,18 @@
 class CMD:
 	# const form json encode & decode
 	JSON_ACTION			= 'a'
+	JSON_A_ID			= 'id'		# get/set/resp id
+	JSON_A_ERR			= 'err'		# for response
 	JSON_DATA			= 'data'
 
+	# Action
 	JSON_A_REPORT		= 'rep'
+	JSON_A_SET			= 'set'
+	JSON_A_GET			= 'get'
+	JSON_A_RESPONSE		= 'resp'
+
+	JSON_A_DISCON		= 'discon'
+	JSON_A_CONN			= 'conn'
 
 	JSON_RO_LEVEL		= 'ro'
 	JSON_SUB_LEVEL		= 'sub'
@@ -25,20 +34,13 @@ class CMD:
 	JSON_MAIN_VOLTAGE	= 'mv'
 	JSON_BATTERY_VOL	= 'bv'
 	JSON_MAIN_CURRENT	= 'mc'
-
 	JSON_MAIN_PUMP_C	= 'mpc'
 	JSON_SKIM_PUMP_C	= 'smc'
 
 	JSON_BAT_24V		= 'bat24'
 	JSON_DC_BAT			= 'dcbat'
 	
-	JSON_A_SET			= 'set'
 
-	JSON_A_GET			= 'get'
-
-	JSON_A_RESPONSE		= 'resp'
 
 	# Others
 	JSON_ALARM_MODE		= 'alarm'
-
-	

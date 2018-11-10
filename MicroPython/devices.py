@@ -29,15 +29,10 @@ class Devices:
 	def Skim_pump_switch(on):
 		Devices.Skim_pump.value(on)
 
-	def Main_wave_switch(on, bak_on):
+	def Main_wave_switch(on):
 		Devices.Main_wave.value(on)
-		Devices.Main_wave_bak.value(bak_on)
 
-	def Main_wave_NightMode(on):
-		if on:
-			Devices.Main_wave.off()
-			Devices.Main_wave_bak.on()
-		else:
-			Devices.Main_wave.on()
-			Devices.Main_wave_bak.on()
+	def Main_wave_bak_Switch(on):
+		Devices.Main_wave_bak.value(on)
+
 
