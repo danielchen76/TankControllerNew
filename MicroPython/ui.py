@@ -10,7 +10,7 @@ from collections import deque
 from json_string import CMD
 
 # total depth
-RO_TANK_TOTAL_LEVEL = const(320)
+RO_TANK_TOTAL_LEVEL = const(318)
 SUB_TANK_TOTAL_LEVEL = const(410)
 
 # UART buffer length
@@ -71,7 +71,7 @@ class UI:
 		UI.cmds = deque((), 5)
 
 	def ProcessReportMsg(msg):
-		UI.LogOut("Report Msg" + str(msg['data']))
+		UI.LogOut("Report Msg:" + str(msg['id']))
 		UI.last_handshake_tick = time.ticks_ms()
 		if UI.uart_connection == False:
 			msg_local = {}
@@ -128,6 +128,7 @@ class UI:
 				msg[CMD.JSON_ACTION] = CMD.JSON_A_DISCON
 				UI.cmds.append(msg)
 				UI.uart_connection = False
+				UI.LogOut("Pi connection disconnect.")
 
 		return len(UI.cmds)
 
@@ -168,6 +169,7 @@ class UI:
 	#  Sub Tank water level
 	def SetSubLevel(value):
 		UI.SubLevel = SUB_TANK_TOTAL_LEVEL - value
+		UI.tm.number(UI.SubLevel)
 
 	def GetSubLevel():
 		return UI.SubLevel
@@ -182,7 +184,7 @@ class UI:
 	# Water Temperature
 	def SetTemperature(value):
 		UI.Temperature = value
-		UI.tm.number(UI.Temperature)
+		# UI.tm.number(UI.Temperature)
 
 	def GetTemperature():
 		return UI.Temperature
@@ -197,6 +199,37 @@ class UI:
 
 		UI.bat24v 		= data['bat24']
 		UI.dc24_bat24 	= data['dc24bat']
+
+	# Sensors
+	def SetSensors(data):
+		UI.Ro_ext_have_water = data['ROEW']
+		UI.Ro_emergen_sensor = data['ROEM']
+		UI.Sub_emergen_sensor = data['SUBEM']
+
+	# Pump
+	def SetSeaPump(on):
+		UI.Sea_pump 		= on
+
+	def SetRoExtPump(on):
+		UI.Ro_ext_pump 		= on
+
+	def SetRoPump(on):
+		UI.Ro_pump 			= on
+
+	def SetReverDc(on):
+		UI.Rever_dc 		= on
+	
+	def SetMainPump(on):
+		UI.Main_pump		= on
+
+	def SetSkimPump(on):
+		UI.Skim_pump		= on
+
+	def SetMainWave(on):
+		UI.Main_wave		= on
+
+	def SetMainWaveBak(on):
+		UI.Main_wave_bak 	= on
 
 	def StatusReport(data):
 		report_data = {}

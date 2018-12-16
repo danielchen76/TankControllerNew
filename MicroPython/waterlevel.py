@@ -1,11 +1,14 @@
 from machine import Pin, UART
 from ringbuffer import RingBuffer
 
+from ui import *
+
 import re
 
 class WaterLevel:
 
 	def __init__(self, port):
+		self.port = port
 		self.uart = UART(port, 9600)
 		self.uart.init(9600, timeout=10)	# 9600, 1byte about 1ms, wait for 10ms
 		self.buffer = RingBuffer(6)

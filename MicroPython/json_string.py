@@ -12,8 +12,15 @@ class CMD:
 	JSON_A_GET			= 'get'
 	JSON_A_RESPONSE		= 'resp'
 
+	# Internal use
 	JSON_A_DISCON		= 'discon'
 	JSON_A_CONN			= 'conn'
+
+	# Internal command
+	JSON_COMMAND		= 'cmd'
+
+	JSON_COMMAND_CONN	= 'conn'
+	JSON_CONN_STATUS	= 'status'
 
 	JSON_RO_LEVEL		= 'ro'
 	JSON_SUB_LEVEL		= 'sub'

@@ -20,39 +20,47 @@ Devices.Init()
 Sensors.Init()
 Power.Init()
 
-# lost connect with Pi Zero, need stop some pump
-def lostConnection():
-	Devices.Ro_pump_switch(False)
-	Devices.Ro_ext_pump_switch(False)
-	Devices.Sea_pump_switch(False)
-	# Sync to UI
 
 def Cmd_Sea_pump_switch(msg):
 	Devices.Sea_pump_switch(msg)
+	UI.SetSeaPump(msg)
 
 def Cmd_Ro_ext_pump_switch(msg):
 	Devices.Ro_ext_pump_switch(msg)
+	UI.SetRoExtPump(msg)
 
 def Cmd_Ro_pump_switch(msg):
 	Devices.Ro_pump_switch(msg)
+	UI.SetRoPump(msg)
 
 def Cmd_Main_pump_switch(msg):
 	Devices.Main_pump_switch(msg)
+	UI.SetMainPump(msg)
 
 def Cmd_Skim_pump_switch(msg):
 	Devices.Skim_pump_switch(msg)
+	UI.SetSkimPump(msg)
 
 def Cmd_Main_wave_switch(msg):
 	Devices.Main_wave_switch(msg)
+	UI.SetMainWave(msg)
 
 def Cmd_Main_wave_bak_switch(msg):
 	Devices.Main_wave_bak_switch(msg)
+	UI.SetMainWaveBak(msg)
 
 def Cmd_SwitchToBattery(msg):
 	Power.SwitchToBattery(msg)
 
 def Cmd_TurnOnBat24V(msg):
 	Power.TurnOnBat24V(msg)
+
+	# lost connect with Pi Zero, need stop some pump
+def lostConnection():
+	UI.LogOut("Stop special pumps.")
+	Cmd_Ro_pump_switch(False)
+	Cmd_Ro_ext_pump_switch(False)
+	Cmd_Sea_pump_switch(False)
 
 
 Cmd_entries = {
@@ -77,6 +85,18 @@ def Cmd_Set(id, data):
 
 	UI.Response(id, 0)
 
+def Cmd_Disconnect():
+	# Stop some pump for safty
+	lostConnection()
+
+	# Alarm
+
+	return
+
+def Cmd_Connect():
+	# Cancel Alarm
+	
+	return
 
 # Main loop
 while 1:
@@ -97,7 +117,9 @@ while 1:
 		UI.SetTemperature(Temperature.GetValue())
 
 	# Sensors
-	Sensors.check()
+	data = Sensors.check()
+	if data:
+		UI.SetSensors(data)
 
 	# Power
 	data = Power.Check()
@@ -117,6 +139,10 @@ while 1:
 					UI.LogOut(str(msg.get(CMD.JSON_A_ID)))
 					UI.LogOut(str(msg.get(CMD.JSON_DATA)))
 					Cmd_Set(msg.get(CMD.JSON_A_ID), msg.get(CMD.JSON_DATA))
+				elif action == CMD.JSON_A_DISCON:
+					Cmd_Disconnect()
+				elif action == CMD.JSON_A_CONN:
+					Cmd_Connect()
 				else:
 					UI.Response(msg.get(CMD.JSON_A_ID), 1)
 
