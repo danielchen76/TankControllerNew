@@ -71,7 +71,6 @@ class UI:
 		UI.cmds = deque((), 5)
 
 	def ProcessReportMsg(msg):
-		UI.LogOut("Report Msg:" + str(msg['id']))
 		UI.last_handshake_tick = time.ticks_ms()
 		if UI.uart_connection == False:
 			msg_local = {}
@@ -268,15 +267,16 @@ class Beep:
 	BEEP_MODE_WARN = const(1)		# Warnning mode()
 	BEEP_MODE_ERROR = const(2)		# Error mode()
 
+	Beep_errors = None
+	Beep_warns = None
+
 	def Init():
 		Beep.pin = Pin('X8', Pin.OUT)
 		Beep.timer = Timer(1)
+		Beep_errors = deque((), 5)
+		Beep_warns = deuque((), 5)
 
 	def Mode(mode):
-		Beep.End()
-		Beep.pin.off()
-		Beep.count = 0
-
 		if mode == Beep.BEEP_MODE_NONE:
 			return
 		elif mode == Beep.BEEP_MODE_WARN:
@@ -288,7 +288,6 @@ class Beep:
 			Beep.off_count = 25
 
 		Beep.max_count = Beep.on_count + Beep.off_count
-		Beep.Begin()
 
 	def Begin():
 		Beep.timer.init(freq = 100, callback = Beep.beepCallback)
@@ -296,6 +295,13 @@ class Beep:
 	def End():
 		Beep.timer.deinit()
 		Beep.pin.off()
+		Beep.count = 0
+
+	def SwitchMode(mode):
+		Beep.End()
+		Beep.Mode(mode)
+		Beep.Begin()
+
 
 	def beepCallback(timer):
 		if Beep.count == 0:

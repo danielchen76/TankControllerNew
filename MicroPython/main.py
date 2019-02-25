@@ -132,7 +132,6 @@ while 1:
 		while 1:
 			try:
 				msg = UI.cmds.popleft()
-				UI.LogOut(str(msg))
 				action = msg.get(CMD.JSON_ACTION)
 				if action == CMD.JSON_A_SET:
 					UI.LogOut(msg.get(CMD.JSON_ACTION))

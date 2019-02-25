@@ -75,8 +75,8 @@ class Sensors:
 	def check():
 		# TODO
 		Ro_ext_have_water = True if Sensors.Ro_ext_sensor.value() == 1 else False
-		Ro_emergen = True if Sensors.Ro_emergen_sensor.value() == 1 else False
-		Sub_emergen = True if Sensors.Sub_emergen_sensor.value() == 1 else False
+		Ro_emergen = True if Sensors.Ro_emergen_sensor.value() == 0 else False
+		Sub_emergen = True if Sensors.Sub_emergen_sensor.value() == 0 else False
 
 		data = {}
 		data['ROEW'] = Ro_ext_have_water

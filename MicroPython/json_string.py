@@ -42,7 +42,7 @@ class CMD:
 	JSON_BATTERY_VOL	= 'bv'
 	JSON_MAIN_CURRENT	= 'mc'
 	JSON_MAIN_PUMP_C	= 'mpc'
-	JSON_SKIM_PUMP_C	= 'smc'
+	JSON_SKIM_PUMP_C	= 'spc'
 
 	JSON_BAT_24V		= 'bat24'
 	JSON_DC_BAT			= 'dcbat'
