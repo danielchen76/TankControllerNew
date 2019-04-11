@@ -215,8 +215,8 @@ class UI:
 	def SetRoPump(on):
 		UI.Ro_pump 			= on
 
-	def SetReverDc(on):
-		UI.Rever_dc 		= on
+	def SetAuxPump(on):
+		UI.Aux_pump 		= on
 	
 	def SetMainPump(on):
 		UI.Main_pump		= on

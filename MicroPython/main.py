@@ -49,6 +49,10 @@ def Cmd_Main_wave_bak_switch(msg):
 	Devices.Main_wave_bak_switch(msg)
 	UI.SetMainWaveBak(msg)
 
+def Cmd_Aux_pump_switch(msg):
+	Devices.Aux_pump_switch(msg)
+	UI.SetAuxPump(msg)
+
 def Cmd_SwitchToBattery(msg):
 	Power.SwitchToBattery(msg)
 
@@ -64,13 +68,14 @@ def lostConnection():
 
 
 Cmd_entries = {
-	CMD.JSON_MAIN_PUMP		: Cmd_Sea_pump_switch,
+	CMD.JSON_MAIN_PUMP		: Cmd_Main_pump_switch,
 	CMD.JSON_SKIM_PUMP		: Cmd_Skim_pump_switch,
 	CMD.JSON_RO_PUMP		: Cmd_Ro_pump_switch,
 	CMD.JSON_RO_EXT_PUMP	: Cmd_Ro_ext_pump_switch,
 	CMD.JSON_SEA_PUMP		: Cmd_Sea_pump_switch,
 	CMD.JSON_WAVE_PUMP		: Cmd_Main_wave_switch,
 	CMD.JSON_WAVE_BAK		: Cmd_Main_wave_bak_switch,
+	CMD.JSON_AUX_PUMP		: Cmd_Aux_pump_switch,
 
 	CMD.JSON_BAT_24V		: Cmd_SwitchToBattery,
 	CMD.JSON_DC_BAT			: Cmd_TurnOnBat24V,

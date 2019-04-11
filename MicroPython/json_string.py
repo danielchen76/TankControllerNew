@@ -33,6 +33,7 @@ class CMD:
 	JSON_RO_PUMP		= 'rp'
 	JSON_RO_EXT_PUMP	= 'rep'
 	JSON_SEA_PUMP		= 'seap'
+	JSON_AUX_PUMP		= 'ap'
 
 	JSON_RO_EXT_WATER	= 'roew'
 	JSON_RO_EMERGEN		= 'roem'
