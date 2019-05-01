@@ -11,7 +11,7 @@ from json_string import CMD
 
 # total depth
 RO_TANK_TOTAL_LEVEL = const(318)
-SUB_TANK_TOTAL_LEVEL = const(410)
+SUB_TANK_TOTAL_LEVEL = const(390)
 
 # UART buffer length
 UI_UART_BUF_LEN = const(256)
@@ -62,7 +62,7 @@ class UI:
 		UI.tm.write([0, 0, 0, 0])
 
 		UI.pi_uart = UART(1, 115200)
-		UI.pi_uart.init(115200, timeout = 100)
+		UI.pi_uart.init(115200, timeout = 100, read_buf_len = 512)
 
 		# Buffer
 		UI.uart_buf = memoryview(bytearray(UI_UART_BUF_LEN))
@@ -86,6 +86,7 @@ class UI:
 		try:
 			data = json.loads(msg)
 		except:
+			UI.LogOut("json decode failed, Msg:" + str(msg))
 			data = None
 		else:
 			# put data input queue

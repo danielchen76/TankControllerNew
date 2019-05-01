@@ -11,7 +11,7 @@ class WaterLevel:
 		self.port = port
 		self.uart = UART(port, 9600)
 		self.uart.init(9600, timeout=10)	# 9600, 1byte about 1ms, wait for 10ms
-		self.buffer = RingBuffer(6)
+		self.buffer = RingBuffer(10)
 
 	# return
 	# False: no change
